@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Chore Champions · English Clean-up</title>
+  <style>
+    /* ------------------------------------------------------------
+       GLOBAL RESET & CSS VARIABLES
+    ------------------------------------------------------------ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    :root {
+      --todo-width: 300px;
+      --rooms-max-width: 1100px;
+      --btn-size: 76px;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+      background: #fff7e9;
+      background-image: radial-gradient(circle at 20% 30%, #fff3d6 0%, #ffe7c4 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 12px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 1400px;
+      height: 96vh;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ------------------------------------------------------------
+       TOP: TODO + ROOMS
+    ------------------------------------------------------------ */
+    .top-panel {
+      display: flex;
+      flex: 1 1 auto;
+      gap: 16px;
+      min-height: 0;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    /* -------- LEFT: TODO -------- */
+    .todo-panel {
+      flex: 0 0 var(--todo-width);
+      background: #ffffffdd;
+      backdrop-filter: blur(4px);
+      border-radius: 36px;
+      padding: 24px 16px 18px 16px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.02);
+      display: flex;
+      flex-direction: column;
+      border: 4px solid #fce1b0;
+      transition: all 0.2s;
+    }
+
+    .todo-panel h2 {
+      font-size: 1.8rem;
+      text-align: center;
+      color: #7b5e3c;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .todo-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.45rem;
+      background: white;
+      padding: 14px 18px;
+      border-radius: 60px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.03);
+      border: 3px solid #f5e2c1;
+      color: #4a3728;
+      font-weight: 600;
+      transition: background 0.2s, border 0.2s, transform 0.1s;
+    }
+
+    .todo-item .check-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #f0e0c8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      color: #b49b7a;
+      flex-shrink: 0;
+      transition: background 0.2s, color 0.2s, transform 0.2s;
+    }
+
+    .todo-item.completed {
+      text-decoration: line-through;
+      color: #a59b8b;
+      background: #e6f0e6;
+      border-color: #c7ddc7;
+    }
+
+    .todo-item.completed .check-icon {
+      background: #7bc47b;
+      color: white;
+      transform: scale(1.1);
+      animation: popCheck 0.3s ease-out;
+    }
+
+    @keyframes popCheck {
+      0% { transform: scale(0.6); opacity: 0.6; }
+      80% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+
+    .todo-panel.all-done {
+      border-color: #f9b83a;
+      box-shadow: 0 0 0 4px #fdeacb, 0 10px 20px rgba(0, 0, 0, 0.08);
+      transform: scale(1.01);
+    }
+
+    /* -------- REMEMBER SECTION (装饰性评分提示) -------- */
+    .remember-section {
+      margin-top: 22px;
+      padding: 14px 14px 12px 14px;
+      border: 3px dashed #f5dbb0;
+      border-radius: 28px;
+      background: #fff7e6;
+    }
+
+    .remember-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #7b5e3c;
+      text-align: center;
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+
+    .remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 5px 4px;
+    }
+
+    .remember-label {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #7b5e3c;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .remember-label .cn {
+      font-size: 0.7rem;
+      color: #b08a55;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .remember-stars {
+      display: flex;
+      gap: 3px;
+    }
+
+    .remember-stars .star-deco {
+      font-size: 1.35rem;
+      line-height: 1;
+      color: #d8cfc0;
+      filter: grayscale(0.4);
+    }
+
+    /* -------- RIGHT: ROOMS -------- */
+    .rooms-area {
+      position: relative;   /* 用于放置重置按钮 */
+      flex: 1 1 auto;
+      max-width: var(--rooms-max-width);
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 14px;
+      background: #ffffffb8;
+      border-radius: 48px;
+      padding: 18px 14px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.02);
+      backdrop-filter: blur(4px);
+      border: 4px solid #ffe9cf;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    /* 右侧重置按钮 */
+    .reset-fab {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 20;
+      background: #fff3e0;
+      color: #7b5e3c;
+      border: 3px solid #f5dbb0;
+      border-radius: 50px;
+      padding: 6px 16px;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #e6c79a, 0 6px 12px rgba(0, 0, 0, 0.08);
+      transition: all 0.1s ease;
+    }
+
+    .reset-fab:hover {
+      background: #ffeac2;
+      transform: translateY(-1px);
+    }
+
+    .reset-fab:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #e6c79a, 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .room-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #ffffffc0;
+      border-radius: 28px;
+      padding: 10px 10px 8px 10px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .room-card.living {
+      grid-column: 1 / 2;
+      grid-row: 1 / 3;
+    }
+
+    .room-card.balcony {
+      grid-column: 2 / 3;
+      grid-row: 1 / 2;
+    }
+
+    .room-card.bedroom {
+      grid-column: 2 / 3;
+      grid-row: 2 / 3;
+    }
+
+    .room-card.living img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 22px;
+      background: #f5ede2;
+      box-shadow: inset 0 0 0 2px #fff8ee, 0 4px 8px rgba(0, 0, 0, 0.05);
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .room-card.balcony img,
+    .room-card.bedroom img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 22px;
+      background: #f5ede2;
+      box-shadow: inset 0 0 0 2px #fff8ee, 0 4px 8px rgba(0, 0, 0, 0.05);
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .room-label {
+      margin-top: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #7b5e3c;
+      letter-spacing: 0.5px;
+      background: #fef3e4;
+      padding: 5px 20px;
+      border-radius: 40px;
+      border: 2px solid #f5dbb0;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    /* ------------------------------------------------------------
+       BOTTOM: ACTION BUTTONS
+    ------------------------------------------------------------ */
+    .actions-bar {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      padding: 10px 0 6px 0;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      width: var(--btn-size);
+      height: var(--btn-size);
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffeac2, #fdd28b);
+      border: none;
+      box-shadow: 0 8px 0 #b78e4b, 0 10px 18px rgba(0, 0, 0, 0.1);
+      font-size: 2.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.07s ease;
+      transform: translateY(0);
+      color: #5e3f1e;
+      padding: 0;
+      line-height: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .action-btn:active {
+      transform: translateY(5px);
+      box-shadow: 0 3px 0 #b78e4b, 0 5px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffffff90 10%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    .action-btn:active::after {
+      opacity: 1;
+    }
+
+    .action-btn.done {
+      opacity: 0.6;
+      filter: grayscale(0.2);
+      box-shadow: 0 4px 0 #a0845a, 0 6px 12px rgba(0, 0, 0, 0.06);
+      transform: translateY(3px);
+      pointer-events: none;
+      transition: all 0.1s;
+    }
+
+    /* ------------------------------------------------------------
+       CONGRATS OVERLAY + CONFETTI
+    ------------------------------------------------------------ */
+    .congrats-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(250, 235, 200, 0.75);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.3s, visibility 0.3s;
+      pointer-events: none;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .congrats-overlay.show {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .congrats-card {
+      background: #fffcf2;
+      border: 6px solid #f9b83a;
+      border-radius: 60px;
+      padding: 36px 48px;
+      text-align: center;
+      box-shadow: 0 30px 40px rgba(0, 0, 0, 0.2);
+      animation: bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      z-index: 10;
+      max-width: 640px;
+      width: 100%;
+    }
+
+    .congrats-card h1 {
+      font-size: 3rem;
+      color: #a5661e;
+      text-shadow: 4px 4px 0 #fdeacb;
+      margin-bottom: 8px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .congrats-card .subtitle {
+      font-size: 1.1rem;
+      color: #b08a55;
+      margin-bottom: 22px;
+      letter-spacing: 1px;
+    }
+
+    .rating-section {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-bottom: 28px;
+      padding: 18px 14px;
+      background: #fff7e6;
+      border-radius: 40px;
+      border: 3px dashed #f5dbb0;
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .rating-label {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #7b5e3c;
+      text-align: left;
+      min-width: 150px;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+
+    .rating-label .cn {
+      font-size: 0.85rem;
+      color: #b08a55;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .stars {
+      display: flex;
+      gap: 6px;
+    }
+
+    .star {
+      font-size: 2.4rem;
+      line-height: 1;
+      cursor: pointer;
+      color: #d8cfc0;
+      transition: transform 0.12s ease, color 0.15s ease, text-shadow 0.15s;
+      user-select: none;
+      filter: grayscale(0.4);
+    }
+
+    .star:hover {
+      transform: scale(1.15);
+    }
+
+    .star.active {
+      color: #ffc93c;
+      filter: none;
+      text-shadow: 0 0 8px #ffdf80;
+    }
+
+    .star.pop {
+      animation: starPop 0.35s ease-out;
+    }
+
+    @keyframes starPop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.5) rotate(8deg); }
+      70% { transform: scale(0.9) rotate(-4deg); }
+      100% { transform: scale(1); }
+    }
+
+    .retry-btn {
+      background: #f9b83a;
+      border: none;
+      font-size: 1.8rem;
+      font-weight: bold;
+      padding: 14px 44px;
+      border-radius: 60px;
+      color: #4a2e10;
+      box-shadow: 0 8px 0 #b57e2a, 0 10px 20px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.1s;
+      letter-spacing: 2px;
+      border: 2px solid #ffd966;
+    }
+
+    .retry-btn:active {
+      transform: translateY(5px);
+      box-shadow: 0 3px 0 #b57e2a, 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .confetti {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      top: -20px;
+      z-index: 999;
+      pointer-events: none;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* 小屏适配 */
+    @media (max-width: 1100px) {
+      :root {
+        --todo-width: 260px;
+        --btn-size: 62px;
+        --rooms-max-width: 900px;
+      }
+      .todo-item { font-size: 1.1rem; padding: 10px 14px; }
+      .todo-item .check-icon { width: 28px; height: 28px; font-size: 1.2rem; }
+      .action-btn { font-size: 2rem; }
+      .remember-label { font-size: 0.85rem; }
+      .remember-stars .star-deco { font-size: 1.15rem; }
+    }
+
+    @media (max-width: 850px) {
+      .top-panel { flex-direction: column; }
+      .todo-panel { flex: 0 0 auto; }
+      .rooms-area { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr; }
+      .room-card.living { grid-column: 1 / 2; grid-row: 1 / 2; }
+      .room-card.balcony { grid-column: 1 / 2; grid-row: 2 / 3; }
+      .room-card.bedroom { grid-column: 1 / 2; grid-row: 3 / 4; }
+    }
+
+    @media (max-width: 600px) {
+      .congrats-card { padding: 24px 20px; border-radius: 40px; }
+      .congrats-card h1 { font-size: 1.8rem; }
+      .rating-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+      .rating-label { min-width: auto; }
+      .star { font-size: 2rem; }
+      .retry-btn { font-size: 1.3rem; padding: 12px 28px; }
+      .reset-fab { font-size: 0.85rem; padding: 4px 12px; top: 10px; right: 10px; }
+    }
+
+    img, .game-container { max-width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="top-panel">
+      <!-- 左侧 To-Do + Remember -->
+      <div class="todo-panel" id="todoPanel">
+        <h2>📋 To‑Do</h2>
+        <ul class="todo-list" id="todoList"></ul>
+
+        <!-- 装饰性 Remember 提示区 -->
+        <div class="remember-section">
+          <div class="remember-title">Remember</div>
+
+          <div class="remember-row">
+            <div class="remember-label">
+              Fluency
+              <span class="cn">流畅</span>
+            </div>
+            <div class="remember-stars">
+              <span class="star-deco">★</span>
+              <span class="star-deco">★</span>
+              <span class="star-deco">★</span>
+            </div>
+          </div>
+
+          <div class="remember-row">
+            <div class="remember-label">
+              Accuracy
+              <span class="cn">准确</span>
+            </div>
+            <div class="remember-stars">
+              <span class="star-deco">★</span>
+              <span class="star-deco">★</span>
+              <span class="star-deco">★</span>
+            </div>
+          </div>
+
+          <div class="remember-row">
+            <div class="remember-label">
+              Loud Voice
+              <span class="cn">大声</span>
+            </div>
+            <div class="remember-stars">
+              <span class="star-deco">★</span>
+              <span class="star-deco">★</span>
+              <span class="star-deco">★</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧房间区域 + 重置按钮 -->
+      <div class="rooms-area">
+        <button class="reset-fab" id="resetFab" title="Reset all">🔄 Reset</button>
+
+        <div class="room-card living">
+          <img id="livingImg" src="living-floor_table_dog.png" alt="Living room">
+          <span class="room-label">🛋️ Living</span>
+        </div>
+        <div class="room-card balcony">
+          <img id="balconyImg" src="balcony-flower_wet_clothes.png" alt="Balcony">
+          <span class="room-label">🌿 Balcony</span>
+        </div>
+        <div class="room-card bedroom">
+          <img id="bedroomImg" src="bedroom-make_bed.png" alt="Bedroom">
+          <span class="room-label">🛏️ Bedroom</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-bar" id="actionsBar">
+      <button class="action-btn" data-task="wipeTable" title="Wipe table"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 桌面 -->
+  <rect x="6" y="22" width="52" height="10" rx="3" fill="#C98A4B"/>
+  <rect x="6" y="22" width="52" height="4" rx="2" fill="#E0A96D"/>
+  <!-- 桌腿 -->
+  <rect x="10" y="32" width="5" height="22" rx="2" fill="#A56A34"/>
+  <rect x="49" y="32" width="5" height="22" rx="2" fill="#A56A34"/>
+  <!-- 抹布 -->
+  <path d="M22 14 Q26 10 32 14 Q38 18 34 24 Q28 28 22 24 Q18 18 22 14 Z" fill="#7FD1E8"/>
+  <circle cx="28" cy="19" r="2" fill="#FFFFFF" opacity="0.7"/>
+  <circle cx="33" cy="22" r="1.5" fill="#FFFFFF" opacity="0.7"/>
+</svg>
+</button>
+      <button class="action-btn" data-task="sweepFloor" title="Sweep floor"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 扫把杆 -->
+  <rect x="30" y="6" width="4" height="32" rx="2" fill="#C98A4B"/>
+  <!-- 扫把毛 -->
+  <path d="M18 38 L46 38 L42 56 L22 56 Z" fill="#F4B942"/>
+  <path d="M22 38 L30 56 M28 38 L34 56 M34 38 L38 56 M40 38 L42 56"
+        stroke="#D89422" stroke-width="1.5" fill="none"/>
+  <!-- 绑带 -->
+  <rect x="18" y="36" width="28" height="4" rx="1.5" fill="#A56A34"/>
+</svg></button>
+      <button class="action-btn" data-task="feedDog" title="Feed dog"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 大掌垫 -->
+  <ellipse cx="32" cy="42" rx="14" ry="11" fill="#F2A65A"/>
+  <!-- 四个脚趾 -->
+  <ellipse cx="16" cy="26" rx="5.5" ry="7" fill="#F2A65A"/>
+  <ellipse cx="26" cy="18" rx="5.5" ry="7" fill="#F2A65A"/>
+  <ellipse cx="38" cy="18" rx="5.5" ry="7" fill="#F2A65A"/>
+  <ellipse cx="48" cy="26" rx="5.5" ry="7" fill="#F2A65A"/>
+  <!-- 高光 -->
+  <ellipse cx="29" cy="40" rx="4" ry="3" fill="#FFFFFF" opacity="0.35"/>
+</svg></button>
+      <button class="action-btn" data-task="makeBed" title="Make bed"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 床头板 -->
+  <rect x="4" y="20" width="8" height="30" rx="3" fill="#A56A34"/>
+  <!-- 床垫 -->
+  <rect x="12" y="34" width="46" height="12" rx="3" fill="#F6F2E7"/>
+  <!-- 被子 -->
+  <rect x="12" y="34" width="46" height="12" rx="3" fill="#7FB8E8"/>
+  <rect x="12" y="34" width="46" height="5" rx="3" fill="#A8D0F0"/>
+  <!-- 枕头 -->
+  <rect x="14" y="28" width="14" height="8" rx="3" fill="#FFFFFF"/>
+  <rect x="14" y="28" width="14" height="8" rx="3" fill="none" stroke="#E0D6C2" stroke-width="1"/>
+  <!-- 床腿 -->
+  <rect x="14" y="46" width="4" height="10" rx="1.5" fill="#8B5A2B"/>
+  <rect x="52" y="46" width="4" height="10" rx="1.5" fill="#8B5A2B"/>
+</svg></button>
+      <button class="action-btn" data-task="hangClothes" title="Hang clothes"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 衣架 -->
+  <path d="M24 14 L32 8 L40 14" stroke="#A56A34" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- T 恤主体 -->
+  <path d="M20 16 L14 22 L20 26 L20 50 Q20 54 24 54 L40 54 Q44 54 44 50 L44 26 L50 22 L44 16 L38 16 Q32 22 26 16 Z"
+        fill="#7FD1E8" stroke="#4FB3D9" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- 领口 -->
+  <path d="M26 16 Q32 22 38 16" fill="none" stroke="#4FB3D9" stroke-width="1.5"/>
+</svg></button>
+      <button class="action-btn" data-task="waterFlower" title="Water flower"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- 花茎 -->
+  <path d="M32 34 L32 56" stroke="#5FA85F" stroke-width="3" stroke-linecap="round"/>
+  <!-- 叶子 -->
+  <path d="M32 44 Q22 42 20 36 Q28 36 32 44 Z" fill="#7CC47C"/>
+  <path d="M32 50 Q42 48 44 42 Q36 42 32 50 Z" fill="#7CC47C"/>
+  <!-- 花瓣 -->
+  <circle cx="32" cy="20" r="7" fill="#F48FB1"/>
+  <circle cx="24" cy="26" r="7" fill="#F48FB1"/>
+  <circle cx="40" cy="26" r="7" fill="#F48FB1"/>
+  <circle cx="27" cy="34" r="7" fill="#F48FB1"/>
+  <circle cx="37" cy="34" r="7" fill="#F48FB1"/>
+  <!-- 花心 -->
+  <circle cx="32" cy="28" r="5" fill="#FFD54F"/>
+</svg></button>
+    </div>
+  </div>
+
+  <!-- CONGRATS OVERLAY with RATING -->
+  <div class="congrats-overlay" id="congratsOverlay">
+    <div class="congrats-card">
+      <h1>You did a good job!</h1>
+      <p class="subtitle">⭐ Rate your English ⭐</p>
+
+      <div class="rating-section">
+        <div class="rating-row" data-category="fluency">
+          <div class="rating-label">
+            Fluency
+            <span class="cn">流畅</span>
+          </div>
+          <div class="stars" data-category="fluency">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+          </div>
+        </div>
+
+        <div class="rating-row" data-category="accuracy">
+          <div class="rating-label">
+            Accuracy
+            <span class="cn">准确</span>
+          </div>
+          <div class="stars" data-category="accuracy">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+          </div>
+        </div>
+
+        <div class="rating-row" data-category="loudVoice">
+          <div class="rating-label">
+            Loud Voice
+            <span class="cn">大声</span>
+          </div>
+          <div class="stars" data-category="loudVoice">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="retry-btn" id="retryBtn">🔄 Retry</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      /* ============================================================
+         🔊 AUDIO ENGINE
+      ============================================================ */
+      let audioCtx = null;
+
+      function getAudioCtx() {
+        if (!audioCtx) {
+          try {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          } catch (e) {
+            console.warn('Web Audio API not supported', e);
+            return null;
+          }
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+      }
+
+      function playTone(freq, duration, startTime = 0, volume = 0.3, type = 'sine') {
+        const ctx = getAudioCtx();
+        if (!ctx) return;
+        const t0 = ctx.currentTime + startTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.001, t0);
+        gain.gain.exponentialRampToValueAtTime(volume, t0 + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + duration + 0.02);
+      }
+
+      function playDing() {
+        playTone(880, 0.4, 0, 0.25);
+      }
+
+      function playSuccess() {
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, i) => {
+          playTone(freq, i === notes.length - 1 ? 0.6 : 0.35, i * 0.12, 0.28);
+        });
+      }
+
+      function playStarOn(starValue) {
+        const freqMap = { 1: 523.25, 2: 659.25, 3: 783.99 };
+        const freq = freqMap[starValue] || 523.25;
+        playTone(freq, 0.35, 0, 0.25, 'sine');
+        playTone(freq * 2, 0.25, 0.02, 0.12, 'sine');
+      }
+
+      function playStarOff() {
+        playTone(392, 0.25, 0, 0.2, 'sine');
+      }
+
+      /* ============================================================
+         任务定义 & 状态
+      ============================================================ */
+      const TASK_LABELS = {
+        wipeTable: 'clean the table',
+        sweepFloor: 'Sweep the floor',
+        feedDog: 'Feed the dog',
+        makeBed: 'Make the bed',
+        hangClothes: 'Hang up the clothes',
+        waterFlower: 'Water theflower'
+      };
+
+      let taskState = {
+        wipeTable: false,
+        sweepFloor: false,
+        feedDog: false,
+        makeBed: false,
+        hangClothes: false,
+        waterFlower: false
+      };
+
+      /* ============================================================
+         图片映射表
+      ============================================================ */
+      const livingLookup = {
+        '0_0_0': 'living-floor_table_dog.png',
+        '1_0_0': 'living-floor_dog.png',
+        '0_1_0': 'living-table_dog.png',
+        '0_0_1': 'living-floor_table.png',
+        '1_1_0': 'living-dog.png',
+        '1_0_1': 'living-floor.png',
+        '0_1_1': 'living-table.png',
+        '1_1_1': 'living-clean.png'
+      };
+
+      const balconyLookup = {
+        '0_0': 'balcony-flower_wet_clothes.png',
+        '0_1': 'balcony-flower.png',
+        '1_0': 'balcony-wet_clothes.png',
+        '1_1': 'balcony-clean.png'
+      };
+
+      const bedroomLookup = {
+        '0': 'bedroom-make_bed.png',
+        '1': 'bedroom-clean.png'
+      };
+
+      function livingKey(state) {
+        return `${state.wipeTable ? 1 : 0}_${state.sweepFloor ? 1 : 0}_${state.feedDog ? 1 : 0}`;
+      }
+      function balconyKey(state) {
+        return `${state.waterFlower ? 1 : 0}_${state.hangClothes ? 1 : 0}`;
+      }
+      function bedroomKey(state) {
+        return `${state.makeBed ? 1 : 0}`;
+      }
+
+      /* ============================================================
+         DOM 引用
+      ============================================================ */
+      const livingImg = document.getElementById('livingImg');
+      const balconyImg = document.getElementById('balconyImg');
+      const bedroomImg = document.getElementById('bedroomImg');
+      const todoListEl = document.getElementById('todoList');
+      const todoPanel = document.getElementById('todoPanel');
+      const actionBtns = document.querySelectorAll('.action-btn');
+      const congratsOverlay = document.getElementById('congratsOverlay');
+      const retryBtn = document.getElementById('retryBtn');
+      const resetFab = document.getElementById('resetFab');
+
+      /* ============================================================
+         预加载图片
+      ============================================================ */
+      [
+        'living-floor_table_dog.png', 'living-floor_dog.png', 'living-table_dog.png',
+        'living-floor_table.png', 'living-dog.png', 'living-floor.png',
+        'living-table.png', 'living-clean.png',
+        'balcony-flower_wet_clothes.png', 'balcony-flower.png',
+        'balcony-wet_clothes.png', 'balcony-clean.png',
+        'bedroom-make_bed.png', 'bedroom-clean.png'
+      ].forEach(src => { const img = new Image(); img.src = src; });
+
+      /* ============================================================
+         渲染 Todo 列表
+      ============================================================ */
+      function renderTodoList() {
+        const order = ['wipeTable', 'sweepFloor', 'feedDog', 'makeBed', 'hangClothes', 'waterFlower'];
+        let html = '';
+        order.forEach(taskId => {
+          const done = taskState[taskId];
+          html += `
+            <li class="todo-item ${done ? 'completed' : ''}" data-task="${taskId}">
+              <span class="check-icon">${done ? '✅' : '○'}</span>
+              <span>${TASK_LABELS[taskId]}</span>
+            </li>
+          `;
+        });
+        todoListEl.innerHTML = html;
+
+        const allDone = Object.values(taskState).every(v => v === true);
+        todoPanel.classList.toggle('all-done', allDone);
+      }
+
+      /* ============================================================
+         更新房间图片
+      ============================================================ */
+      function updateImages() {
+        const lKey = livingKey(taskState);
+        if (livingLookup[lKey]) livingImg.src = livingLookup[lKey];
+
+        const bKey = balconyKey(taskState);
+        if (balconyLookup[bKey]) balconyImg.src = balconyLookup[bKey];
+
+        const bedKey = bedroomKey(taskState);
+        if (bedroomLookup[bedKey]) bedroomImg.src = bedroomLookup[bedKey];
+      }
+
+      /* ============================================================
+         更新按钮状态
+      ============================================================ */
+      function updateButtons() {
+        actionBtns.forEach(btn => {
+          const task = btn.dataset.task;
+          if (taskState[task]) {
+            btn.classList.add('done');
+            btn.disabled = true;
+          } else {
+            btn.classList.remove('done');
+            btn.disabled = false;
+          }
+        });
+      }
+
+      /* ============================================================
+         完成检测 & 庆祝
+      ============================================================ */
+      function checkAllDone() {
+        if (Object.values(taskState).every(v => v === true)) {
+          congratsOverlay.classList.add('show');
+          startConfetti();
+          playSuccess();
+        }
+      }
+
+      /* ============================================================
+         彩花效果
+      ============================================================ */
+      let confettiInterval = null;
+      const CONFETTI_COLORS = ['#f9b83a', '#fdd28b', '#ff8a5c', '#7bc47b', '#6ec3e0', '#e67e9e', '#b983ff', '#ffd966'];
+
+      function createConfettiPiece() {
+        const piece = document.createElement('div');
+        piece.className = 'confetti';
+        const size = Math.floor(Math.random() * 8 + 6);
+        piece.style.width = size + 'px';
+        piece.style.height = size + 'px';
+        piece.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        piece.style.left = Math.random() * 100 + '%';
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        piece.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(piece);
+        setTimeout(() => { if (piece.parentNode) piece.remove(); }, 4500);
+      }
+
+      function startConfetti() {
+        if (confettiInterval) clearInterval(confettiInterval);
+        for (let i = 0; i < 60; i++) setTimeout(() => createConfettiPiece(), i * 20);
+        confettiInterval = setInterval(() => {
+          if (!congratsOverlay.classList.contains('show')) {
+            clearInterval(confettiInterval);
+            confettiInterval = null;
+            return;
+          }
+          for (let i = 0; i < 5; i++) setTimeout(() => createConfettiPiece(), i * 50);
+        }, 300);
+      }
+
+      function stopConfetti() {
+        if (confettiInterval) { clearInterval(confettiInterval); confettiInterval = null; }
+        document.querySelectorAll('.confetti').forEach(el => el.remove());
+      }
+
+      /* ============================================================
+         ⭐ 星级评分系统（祝贺弹窗内）
+      ============================================================ */
+      const ratingState = {
+        fluency: 0,
+        accuracy: 0,
+        loudVoice: 0
+      };
+
+      function renderStars(category) {
+        const starsContainer = document.querySelector(`.stars[data-category="${category}"]`);
+        if (!starsContainer) return;
+        const stars = starsContainer.querySelectorAll('.star');
+        const current = ratingState[category];
+        stars.forEach(star => {
+          const val = parseInt(star.dataset.value, 10);
+          star.classList.toggle('active', val <= current);
+        });
+      }
+
+      function onStarClick(e) {
+        const star = e.currentTarget;
+        const category = star.parentElement.dataset.category;
+        const value = parseInt(star.dataset.value, 10);
+        const current = ratingState[category];
+
+        let newValue;
+        if (current === value) {
+          newValue = value - 1;
+          if (newValue < 0) newValue = 0;
+          playStarOff();
+        } else {
+          newValue = value;
+          playStarOn(value);
+          star.classList.remove('pop');
+          void star.offsetWidth;
+          star.classList.add('pop');
+          burstConfetti(star);
+        }
+
+        ratingState[category] = newValue;
+        renderStars(category);
+      }
+
+      function burstConfetti(anchorEl) {
+        const rect = anchorEl.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        for (let i = 0; i < 8; i++) {
+          const piece = document.createElement('div');
+          piece.className = 'confetti';
+          const size = Math.floor(Math.random() * 6 + 4);
+          piece.style.width = size + 'px';
+          piece.style.height = size + 'px';
+          piece.style.backgroundColor = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+          piece.style.left = cx + 'px';
+          piece.style.top = cy + 'px';
+          piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+          const angle = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
+          const dist = 40 + Math.random() * 50;
+          const dx = Math.cos(angle) * dist;
+          const dy = Math.sin(angle) * dist;
+          piece.style.transition = 'transform 0.7s ease-out, opacity 0.7s';
+          piece.style.transform = 'translate(0, 0) scale(1)';
+          piece.style.opacity = '1';
+          document.body.appendChild(piece);
+
+          requestAnimationFrame(() => {
+            piece.style.transform = `translate(${dx}px, ${dy}px) scale(0.3)`;
+            piece.style.opacity = '0';
+          });
+
+          setTimeout(() => { if (piece.parentNode) piece.remove(); }, 800);
+        }
+      }
+
+      document.querySelectorAll('.star').forEach(star => {
+        star.addEventListener('click', onStarClick);
+      });
+
+      /* ============================================================
+         按钮点击处理
+      ============================================================ */
+      function onTaskClick(e) {
+        const btn = e.currentTarget;
+        const task = btn.dataset.task;
+        if (taskState[task]) return;
+
+        taskState[task] = true;
+        playDing();
+
+        renderTodoList();
+        updateImages();
+        updateButtons();
+
+        btn.style.transform = 'scale(0.9)';
+        setTimeout(() => { btn.style.transform = ''; }, 100);
+
+        checkAllDone();
+      }
+
+      actionBtns.forEach(btn => btn.addEventListener('click', onTaskClick));
+
+      /* ============================================================
+         重置
+      ============================================================ */
+      function resetGame() {
+        taskState = {
+          wipeTable: false, sweepFloor: false, feedDog: false,
+          makeBed: false, hangClothes: false, waterFlower: false
+        };
+        ratingState.fluency = 0;
+        ratingState.accuracy = 0;
+        ratingState.loudVoice = 0;
+        renderStars('fluency');
+        renderStars('accuracy');
+        renderStars('loudVoice');
+
+        renderTodoList();
+        updateImages();
+        updateButtons();
+        congratsOverlay.classList.remove('show');
+        stopConfetti();
+        todoPanel.classList.remove('all-done');
+      }
+
+      retryBtn.addEventListener('click', resetGame);
+      resetFab.addEventListener('click', resetGame);
+
+      /* ============================================================
+         初始化
+      ============================================================ */
+      function init() {
+        renderTodoList();
+        updateImages();
+        updateButtons();
+        congratsOverlay.classList.remove('show');
+        renderStars('fluency');
+        renderStars('accuracy');
+        renderStars('loudVoice');
+      }
+      init();
+    })();
+  </script>
+</body>
+</html>
